@@ -20,4 +20,10 @@ class DumBot(Player):
             move = [str(random.randint(0, test_board.x-1)), str(random.randint(0, test_board.y-1))]
             valid_move = test_board.make_move(move[0], move[1])
         return ' '.join(move)
+
+class EasyBot(Player):
+    def __init__(self, name: str, symbol: chr):
+        super().__init__(name, symbol)
+
+
     

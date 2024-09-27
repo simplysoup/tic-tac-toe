@@ -1,0 +1,24 @@
+{
+    "players": [
+        {
+            "player_type": "human",
+            "player_number": "0",
+            "player_name": "Human",
+            "player_symbol": "X"
+        },
+        {
+            "player_type": "dumbot",
+            "player_number": "1",
+            "player_name": "DumBot",
+            "player_symbol": "O"
+        }
+    ],
+
+    "board_state": {
+        "current_player": "0",
+        "num_rows": 3,
+        "num_cols": 3,
+        "win_count": 3,
+        "board": "---------"
+    }
+}
