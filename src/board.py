@@ -35,7 +35,6 @@ class Board2D:
                 string_representation += self.board[self.y*i + j] + ' '
             string_representation += '\n'
         return string_representation
-        
 
     def get_board_state(self):
         return self.board
@@ -55,9 +54,21 @@ class Board2D:
         board_list[self.y*i + j] = player
         self.board = ''.join(board_list)
 
-    def make_move(self, i: str, j: str):
-        if not i.isnumeric() or not j.isnumeric():
+    def index_from_sq(self, i, j):
+        if i not in list(range(0, x)) or j not in list(range(0, y)):
             return -1
+        else: return self.y*i + j
+
+    def sq_from_index(self, i):
+        return [i//self.y, i%self.y]
+
+    def legal_moves(self):
+        return [pos for pos, char in enumerate(list(self.board)) if char == '-']
+
+    def make_move(self, i: int, j: int):
+        if not str(i).isnumeric() or not str(j).isnumeric():
+            return -1
+
         i, j = int(i), int(j)
         if i >= self.x or j >= self.y:
             return -2

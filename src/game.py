@@ -1,5 +1,5 @@
-from src.player import Player, DumBot
-from src.board import Board2D
+from src.player import *
+from src.board import *
 from src.rendering import clear
 
 import pickle
@@ -8,7 +8,9 @@ import json
 
 default_player_types = {
     "human": Player,
-    "dumbot": DumBot
+    "dumbot": DumBot,
+    "easybot": EasyBot,
+    "medbot": MediumBot
 }
 class Game:
     def __init__(self, x: int=3, y: int=3, n: int=3, players: list=[Player('Human', 'X'), DumBot('Random', 'O')]):
@@ -70,6 +72,8 @@ class Game:
                 except:
                     return -1
 
+            self.players = [player1, player2]
+
 
             board_state = cfg['board_state']
 
@@ -83,11 +87,7 @@ class Game:
 
     def config(self):
         clear()
-        p1_type = str(input('Player 1 (Bot: 0, Human: 1): '))
-        while p1_type != '0' and p1_type != '1':
-            clear()
-            print('Invalid input')
-            p1_type = str(input('Player 1 (Bot: 0, Human: 1): '))
+        p1_type = str(input('Player 1 (Human: 0. DumBot: 1, EasyBot: 2, MediumBot: 3): '))
         clear()
 
         p1_name = str(input('Player 1 Name: '))
@@ -100,16 +100,16 @@ class Game:
             p1_symbol = str(input('Player 1 Symbol: '))
         clear()
 
-        if p1_type == '0':
+        if p1_type == '1':
             self.players[0] = DumBot(p1_name, p1_symbol)
+        if p1_type == '2':
+            self.players[0] = EasyBot(p1_name, p1_symbol)
+        if p1_type == '3':
+            self.players[0] = MediumBot(p1_name, p1_symbol)
         else:
             self.players[0] = Player(p1_name, p1_symbol)
 
-        p2_type = str(input('Player 2 (Bot: 0, Human: 1): '))
-        while p2_type not in ['0', '1']:
-            clear()
-            print('Invalid input')
-            p2_type = str(input('Player 2 (Bot: 0, Human: 1): '))
+        p2_type = str(input('Player 2 (Human: 0, DumBot: 1, EasyBot: 2, MediumBot: 3): '))
         clear()
 
         p2_name = str(input('Player 2 Name: '))
@@ -124,14 +124,17 @@ class Game:
             clear()
             if p1_symbol == p2_symbol:
                 print('Player 1 and 2 must have different characters')
-                p2 = str(input('Player 2 Symbol: '))
             if len(p2_symbol) != 1:
                 print('Player 2 must be a single character')
-                p2 = str(input('Player 2 Symbol: '))
+            p2_symbol = str(input('Player 2 Symbol: '))
         clear()
 
-        if p2_type == '0':
+        if p2_type == '1':
             self.players[1] = DumBot(p2_name, p2_symbol)
+        if p2_type == '2':
+            self.players[1] = EasyBot(p2_name, p2_symbol)
+        if p2_type == '3':
+            self.players[1] = MediumBot(p2_name, p2_symbol)
         else:
             self.players[1] = Player(p2_name, p2_symbol)
 

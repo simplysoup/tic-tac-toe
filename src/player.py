@@ -1,5 +1,6 @@
 import random
-from src.board import Board2D
+from src.board import *
+import multiprocessing
 
 class Player:
     def __init__(self, name: str, symbol: chr):
@@ -14,16 +15,46 @@ class DumBot(Player):
 
     def move(self, board: Board2D):
         test_board = board.__copy__()
-        #print(test_board)
-        valid_move = -1
-        while valid_move < 0:
-            move = [str(random.randint(0, test_board.x-1)), str(random.randint(0, test_board.y-1))]
-            valid_move = test_board.make_move(move[0], move[1])
-        return ' '.join(move)
+        i, j = board.sq_from_index(random.sample(board.legal_moves(), 1)[0])
+        return ' '.join([str(i), str(j)])
 
 class EasyBot(Player):
     def __init__(self, name: str, symbol: chr):
         super().__init__(name, symbol)
 
+    def move(self, board: Board2D):
+        move = find_winning_move(board, self.symbol)
+        if move > 0:
+            return ' '.join([str(i) for i in board.sq_from_index(move)])
+        return ' '.join([str(i) for i in board.sq_from_index(random.sample(board.legal_moves(), 1)[0])])
 
-    
+class MediumBot(Player):
+    def __init__(self, name: str, symbol: chr):
+        super().__init__(name, symbol)
+
+    def move(self, board: Board2D):
+        move = find_winning_move(board, self.symbol)
+        print(move)
+        if move >= 0:
+            return ' '.join([str(i) for i in board.sq_from_index(move)])
+        
+        move = find_winning_move(board, board.players[1-board.curr_player])
+        print(move)
+        if move >= 0:
+            return ' '.join([str(i) for i in board.sq_from_index(move)])
+
+        return ' '.join([str(i) for i in board.sq_from_index(random.sample(board.legal_moves(), 1)[0])])
+
+        
+
+
+def find_winning_move(board: Board2D, player: str):
+    for move in board.legal_moves():
+        test_board = board.__copy__()
+        i, j = board.sq_from_index(move)
+        test_board.set_square(player, i, j)
+        winning = test_board.check_win(player)
+
+        if winning:
+            return move
+    return -1
