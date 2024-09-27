@@ -1,6 +1,6 @@
 from src.game import Game
-import tkinter as tkinter
-from tkinter import filedialog
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 from src.rendering import clear
 
 play_again_msg = f"""Play again?:
@@ -16,6 +16,7 @@ cfg_selection_msg = f"""Choose Config Type
   3. Load config file
 	
 Selection: """
+
 
 if __name__ == "__main__":
 	while True:
@@ -35,14 +36,17 @@ if __name__ == "__main__":
 			cfg_status = g.load_config('game-configs/human-dumbot-3-3-3.json')
 
 		if cfg_type == 3:
-			fn = filedialog.askopenfilename(title="Select config file", filetypes=[("JSON file", ('*.json')), ("All files", "*.*")])
+			root = Tk()
+			Tk().withdraw()
+			fn = askopenfilename()
+			root.destroy()
 			cfg_status = g.load_config(fn)
 
 		
 		if cfg_status >= 0:
 			g.play()
 			play_again = input(play_again_msg)
-			if play_again == 1:
+			if play_again == '1':
 				continue
 			else:
 				break
