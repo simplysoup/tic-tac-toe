@@ -25,7 +25,7 @@ class DumBot(Player):
     def move(self, board: Board2D):
         test_board = board.__copy__()
         i, j = board.sq_from_index(random.sample(board.legal_moves(), 1)[0])
-        return ' '.join([str(i), str(j)])
+        return ' '.join([str(j), str(i)])
 
 class EasyBot(Player):
     def __init__(self, name: str, symbol: chr):
@@ -42,17 +42,31 @@ class MediumBot(Player):
     def __init__(self, name: str, symbol: chr):
         super().__init__(name, symbol)
         self.type = 'bot'
+        with open('log.txt', 'w+') as f:
+            f.write('')
+            f.close()
+
+    def log(self, board, move, note):
+        with open('log.txt', 'a+') as f:
+            f.write(' '.join([str(i) for i in board.sq_from_index(move)]) + note + "\n")
+            f.close()
 
     def move(self, board: Board2D):
         move = find_winning_move(board, self.symbol)
         if move >= 0:
+            self.log(board, move, 'winning')
             return ' '.join([str(i) for i in board.sq_from_index(move)])
         
         move = find_winning_move(board, board.players[1-board.curr_player])
         if move >= 0:
+            self.log(board, move, 'saving')
             return ' '.join([str(i) for i in board.sq_from_index(move)])
 
-        return ' '.join([str(i) for i in board.sq_from_index(random.sample(board.legal_moves(), 1)[0])])
+        move = random.sample(board.legal_moves(), 1)[0]
+        self.log(board, move, "random")
+        return ' '.join([str(i) for i in board.sq_from_index(move)])
+    
+    
 
         
 import time

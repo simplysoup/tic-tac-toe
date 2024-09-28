@@ -1,0 +1,6 @@
+2 1random
+1 5random
+1 2saving
+0 5random
+0 3saving
+3 0winning

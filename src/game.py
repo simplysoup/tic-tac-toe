@@ -62,6 +62,19 @@ class Game:
         player2 = self.players[1]
         players = [player1, player2]
         board = self.board
+        awaiting_human_input = False
+
+        def button_click(row, col):
+            nonlocal awaiting_human_input
+            if awaiting_human_input:
+                valid_move = board.make_move(str(row), str(col))
+                if valid_move < 0:
+                    board.curr_player = 1 - board.curr_player
+                else:
+                    awaiting_human_input = False
+                    update_grid()
+                    check_end()
+
         def create_grid(board):
             grid_frame = tk.Frame(root)
             grid_frame.pack()
@@ -71,90 +84,60 @@ class Game:
                 for j in range(board.y):
                     index = board.index_from_sq(i, j)
                     button = tk.Button(grid_frame, text=board.state[index], width=5, height=2,
-                                    command=lambda row=j, col=i: button_click(col, row))
+                                    command=lambda row=i, col=j: button_click(row, col))
                     button.grid(row=i, column=j)
                     row.append(button)
                 buttons.append(row)
             return buttons
+        
+        def end_game():
+            update_grid()
+            self.quit_game()
+            disable_buttons()
+            return
 
+        
+        def check_end():
+            if board.check_win(players[1-board.curr_player].symbol):
+                print(f"{players[1-board.curr_player].name} Wins!")
+                end_game()
+            elif board.check_draw():
+                print("Draw.")
+                end_game()
+                
+        
         def disable_buttons():
-            board.curr_player = -1
-            for row in buttons:
-                for button in row:
-                    button.config(state=tk.DISABLED)
-
-        def button_click(row, col):
-            nonlocal valid_move, awaiting_human_input
-            if awaiting_human_input:
-                player = players[board.curr_player]
-                valid_move = board.make_move(row, col) 
-                if valid_move < 0:
-                    print("Invalid move.")
-                else:
-                    awaiting_human_input = False 
-                    update_grid()
-
+                board.curr_player = -1
+                for row in buttons:
+                    for button in row:
+                        button.config(state=tk.DISABLED)
+        
         def update_grid():
-            for i in range(board.y):
-                for j in range(board.x):
+            for i in range(board.x):
+                for j in range(board.y):
                     index = board.index_from_sq(i, j)
                     buttons[i][j].config(text=board.state[index])
-
-        def check_self_end():
-            if board.check_win(players[board.curr_player].symbol):
-                winner = players[board.curr_player]
-                print(f'{winner.name} wins!')
-                disable_buttons()
-                self.quit_game()
-                valid_move = -2
-                return True
-            elif board.check_win(players[1-board.curr_player].symbol):
-                winner = players[1-board.curr_player]
-                disable_buttons()
-                self.quit_game()
-                valid_move = -2
-                return True
-            elif board.check_draw():
-                print('Draw!')
-                disable_buttons()
-                self.quit_game()
-                valid_move = -2
-                return True
-
-        def get_move():
-            nonlocal valid_move, awaiting_human_input
-            if check_self_end() or self.quit: return
-            player = players[board.curr_player]
-            if player.type in ('human', 'player'):
-                awaiting_human_input = True
-            else:
-                awaiting_human_input = False
-                move_str = player.move(self.board)
-                if move_str is not None:
-                    try:
-                        row, col = map(int, move_str.split())
-                        valid_move = board.make_move(row, col) 
-                        if valid_move < 0:
-                            print("Invalid move.")
-                    except ValueError:
-                        print("Invalid move format.")
-
-        def self_loop():
-            nonlocal valid_move, awaiting_human_input
-
-            if not self.quit:
-                get_move()
-                if valid_move != -1 and not awaiting_human_input:
-                    update_grid()
-                    valid_move = -1
-
-                root.after(10, self_loop)
-
-        buttons = create_grid(board)
-        valid_move = -1
-        awaiting_human_input = False
         
-        self_loop()
+        def game_loop():
+            if self.quit: return
+            nonlocal awaiting_human_input
+            update_grid()
+            if players[board.curr_player].type in ['human', 'player']:
+                awaiting_human_input = True
+            if players[board.curr_player].type in ['bot']:
+                if not awaiting_human_input:
+                    move = players[board.curr_player].move(board)
+                    move = move.split(' ')
+                    valid_move = board.make_move(move[0], move[1])
+                    if valid_move < 0:
+                        board.curr_player = 1 - board.curr_player
+                    else:
+                        update_grid()
+                        check_end()
+            root.after(10, game_loop)
+        
+        buttons = create_grid(board)
+        game_loop()
         root.mainloop()
 
     def load_config(self, fn):

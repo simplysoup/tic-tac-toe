@@ -5,7 +5,8 @@ default_configs = {
     "Human vs Human (3x3, 3)": 'game-configs\human-human-3-3-3.json',
     "Human vs DumBot (3x3, 3)": 'game-configs\human-dumbot-3-3-3.json',
     "Human vs EasyBot (3x3, 3)": 'game-configs\human-easybot-3-3-3.json',
-    "Human vs MedBot (3x3, 3)": 'game-configs\human-medbot-3-3-3.json'
+    "Human vs MedBot (3x3, 3)": 'game-configs\human-medbot-3-3-3.json',
+    "Human vs MedBot (5x7, 4)": 'game-configs\human-medbot-5-7-4.json'
 }
 
 current_game = None
