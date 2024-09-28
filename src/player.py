@@ -6,12 +6,21 @@ class Player:
     def __init__(self, name: str, symbol: chr):
         self.name = name
         self.symbol = symbol
+        self.type = 'player'
+    def move(self, board: Board2D):
+        return str(input())
+
+class Human(Player):
+    def __init__(self, name: str, symbol: chr):
+        super().__init__(name, symbol)
+        self.type = 'human'
     def move(self, board: Board2D):
         return str(input())
 
 class DumBot(Player):
     def __init__(self, name: str, symbol: chr):
         super().__init__(name, symbol)
+        self.type = 'bot'
 
     def move(self, board: Board2D):
         test_board = board.__copy__()
@@ -21,6 +30,7 @@ class DumBot(Player):
 class EasyBot(Player):
     def __init__(self, name: str, symbol: chr):
         super().__init__(name, symbol)
+        self.type = 'bot'
 
     def move(self, board: Board2D):
         move = find_winning_move(board, self.symbol)
@@ -31,15 +41,14 @@ class EasyBot(Player):
 class MediumBot(Player):
     def __init__(self, name: str, symbol: chr):
         super().__init__(name, symbol)
+        self.type = 'bot'
 
     def move(self, board: Board2D):
         move = find_winning_move(board, self.symbol)
-        print(move)
         if move >= 0:
             return ' '.join([str(i) for i in board.sq_from_index(move)])
         
         move = find_winning_move(board, board.players[1-board.curr_player])
-        print(move)
         if move >= 0:
             return ' '.join([str(i) for i in board.sq_from_index(move)])
 

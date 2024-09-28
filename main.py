@@ -35,7 +35,7 @@ if __name__ == "__main__":
 			cfg_status = g.load_config('game-configs/human-dumbot-3-3-3.json')
 
 		elif cfg_type == '3':
-			cfg_status = g.load_config('game-configs/human-medbot-3-3-3.json')
+			cfg_status = g.load_config('game-configs/human-easybot-3-3-3.json')
 		
 		elif cfg_type == '4':
 			cfg_status = g.load_config('game-configs/human-medbot-3-3-3.json')

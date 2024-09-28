@@ -4,10 +4,11 @@ from src.rendering import clear
 
 import pickle
 import json
+import tkinter as tk
 
 
 default_player_types = {
-    "human": Player,
+    "human": Human,
     "dumbot": DumBot,
     "easybot": EasyBot,
     "medbot": MediumBot
@@ -17,12 +18,17 @@ class Game:
         self.board = Board2D(x, y, n, players[0].symbol, players[1].symbol, 0)
         self.players = players
         self.curr_player = 0
+        self.quit=False
+
+    def quit_game(self):
+        self.quit = True
+
     def play(self):
         player1 = self.players[0]
         player2 = self.players[1]
         players = [player1, player2]
         board = self.board
-        while True:
+        while not self.quit:
             player = players[board.curr_player]
             clear()
             print(board)
@@ -45,11 +51,113 @@ class Game:
                 print(f'{player.name} Wins!')
                 break
             
-            if '-' not in board.board:
+            if '-' not in board.state:
                 clear()
                 print(board)
                 print('Tie!')
                 break
+
+    def play_gui(self, root):
+        player1 = self.players[0]
+        player2 = self.players[1]
+        players = [player1, player2]
+        board = self.board
+
+        def create_grid(board):
+            grid_frame = tk.Frame(root)
+            grid_frame.pack()
+            buttons = []
+            for i in range(board.y):
+                row = []
+                for j in range(board.x):
+                    index = board.index_from_sq(i, j)
+                    button = tk.Button(grid_frame, text=board.state[index], width=5, height=2,
+                                    command=lambda row=i, col=j: button_click(row, col))
+                    button.grid(row=i, column=j)
+                    row.append(button)
+                buttons.append(row)
+            return buttons
+
+        def disable_buttons():
+            board.curr_player = -1
+            for row in buttons:
+                for button in row:
+                    button.config(state=tk.DISABLED)
+
+        def button_click(row, col):
+            nonlocal valid_move, awaiting_human_input
+            if awaiting_human_input:
+                player = players[board.curr_player]
+                valid_move = board.make_move(row, col) 
+                if valid_move < 0:
+                    print("Invalid move.")
+                else:
+                    awaiting_human_input = False 
+                    update_grid()
+
+        def update_grid():
+            for i in range(board.y):
+                for j in range(board.x):
+                    index = board.index_from_sq(i, j)
+                    buttons[i][j].config(text=board.state[index])
+
+        def check_self_end():
+            if board.check_win(players[board.curr_player].symbol):
+                winner = players[board.curr_player]
+                print(f'{winner.name} wins!')
+                disable_buttons()
+                self.quit_game()
+                valid_move = -2
+                return True
+            elif board.check_win(players[1-board.curr_player].symbol):
+                winner = players[1-board.curr_player]
+                print(f'{winner.name} wins!')
+                disable_buttons()
+                self.quit_game()
+                valid_move = -2
+                return True
+            elif board.check_draw():
+                print('Draw!')
+                disable_buttons()
+                self.quit_game()
+                valid_move = -2
+                return True
+
+        def get_move():
+            nonlocal valid_move, awaiting_human_input
+            if check_self_end() or self.quit: return
+            player = players[board.curr_player]
+            if player.type in ('human', 'player'):
+                awaiting_human_input = True
+            else:
+                awaiting_human_input = False
+                move_str = player.move(board)
+                if move_str is not None:
+                    try:
+                        row, col = map(int, move_str.split())
+                        valid_move = board.make_move(row, col) 
+                        if valid_move < 0:
+                            print("Invalid move.")
+                    except ValueError:
+                        print("Invalid move format.")
+
+        def self_loop():
+            nonlocal valid_move, awaiting_human_input
+
+            if not self.quit:
+                get_move()
+                if valid_move != -1 and not awaiting_human_input:
+                    update_grid()
+                    valid_move = -1
+
+                root.after(10, self_loop)
+
+        buttons = create_grid(board)
+        valid_move = -1
+        awaiting_human_input = False
+        
+        self_loop()
+        root.mainloop()
 
     def load_config(self, fn):
         with open(fn) as cfg_file:
@@ -79,7 +187,7 @@ class Game:
 
             self.board = Board2D(int(board_state['num_rows']), int(board_state['num_cols']), int(board_state['win_count']), player1.symbol, player2.symbol, int(board_state["current_player"]))
 
-            self.board.board = board_state['board']
+            self.board.state = board_state['board']
 
             cfg_file.close()
             
@@ -166,8 +274,3 @@ class Game:
         clear()
 
         return 0
-               
-if __name__ == "main.py":
-	g = Game()
-	g.config()
-	g.play()
