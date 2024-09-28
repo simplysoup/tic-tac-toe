@@ -55,7 +55,7 @@ class MediumBot(Player):
         return ' '.join([str(i) for i in board.sq_from_index(random.sample(board.legal_moves(), 1)[0])])
 
         
-
+import time
 
 def find_winning_move(board: Board2D, player: str):
     for move in board.legal_moves():

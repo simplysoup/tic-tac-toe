@@ -62,17 +62,16 @@ class Game:
         player2 = self.players[1]
         players = [player1, player2]
         board = self.board
-
         def create_grid(board):
             grid_frame = tk.Frame(root)
             grid_frame.pack()
             buttons = []
-            for i in range(board.y):
+            for i in range(board.x):
                 row = []
-                for j in range(board.x):
+                for j in range(board.y):
                     index = board.index_from_sq(i, j)
                     button = tk.Button(grid_frame, text=board.state[index], width=5, height=2,
-                                    command=lambda row=i, col=j: button_click(row, col))
+                                    command=lambda row=j, col=i: button_click(col, row))
                     button.grid(row=i, column=j)
                     row.append(button)
                 buttons.append(row)
@@ -111,7 +110,6 @@ class Game:
                 return True
             elif board.check_win(players[1-board.curr_player].symbol):
                 winner = players[1-board.curr_player]
-                print(f'{winner.name} wins!')
                 disable_buttons()
                 self.quit_game()
                 valid_move = -2
@@ -131,7 +129,7 @@ class Game:
                 awaiting_human_input = True
             else:
                 awaiting_human_input = False
-                move_str = player.move(board)
+                move_str = player.move(self.board)
                 if move_str is not None:
                     try:
                         row, col = map(int, move_str.split())

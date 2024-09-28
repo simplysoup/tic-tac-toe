@@ -21,7 +21,7 @@ class Board2D:
         board_params = board_str.split(' ')
         x, y, n, p1, p2, curr_player, board = board_params
         copy = Board2D(int(x), int(y), int(n), p1, p2, int(curr_player))
-        copy.board = board
+        copy.state = board
         return copy
 
     def __str__(self):
@@ -35,6 +35,10 @@ class Board2D:
                 string_representation += self.state[self.y*i + j] + ' '
             string_representation += '\n'
         return string_representation
+    
+    def get_arr(self):
+        arr_dict = {'-': 0, self.p1: 1, self.p2: 2}
+        return [[arr_dict[self.state[self.index_from_sq(i, j)]] for j in range(self.y)] for i in range(self.x)]
 
     def get_board_state(self):
         return self.state
