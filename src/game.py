@@ -4,15 +4,30 @@ from src.rendering import clear
 
 import pickle
 import json
+from datetime import datetime
 import tkinter as tk
+from tkinter import messagebox, filedialog, Menu
 
 
 default_player_types = {
-    "human": Human,
-    "dumbot": DumBot,
-    "easybot": EasyBot,
-    "medbot": MediumBot
+    "Player": Player,
+    "Human": Human,
+    "DumBot": DumBot,
+    "EasyBot": EasyBot,
+    "MediumBot": MediumBot,
+    "HardBot": HardBot,
 }
+
+
+def load_from_pickle():
+    filename = filedialog.askopenfilename()
+    try:
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        messagebox.showerror("Error", "Pickle file not found.")
+        return None
+
 class Game:
     def __init__(self, x: int=3, y: int=3, n: int=3, players: list=[Player('Human', 'X'), DumBot('Random', 'O')]):
         self.board = Board2D(x, y, n, players[0].symbol, players[1].symbol, 0)
@@ -49,12 +64,20 @@ class Game:
                 clear()
                 print(board)
                 print(f'{player.name} Wins!')
+                with open('log.txt', 'a+') as f:
+                    f.write(f'{player.name} Wins')
+                    f.write(str(board))
+                    f.close()
                 break
             
             if '-' not in board.state:
                 clear()
                 print(board)
                 print('Tie!')
+                with open('log.txt', 'a+') as f:
+                    f.write('Tie')
+                    f.write(str(board))
+                    f.close()
                 break
 
     def play_gui(self, root):
@@ -71,9 +94,9 @@ class Game:
                 if valid_move < 0:
                     board.curr_player = 1 - board.curr_player
                 else:
-                    awaiting_human_input = False
                     update_grid()
                     check_end()
+                    awaiting_human_input = False
 
         def create_grid(board):
             grid_frame = tk.Frame(root)
@@ -94,6 +117,7 @@ class Game:
             update_grid()
             self.quit_game()
             disable_buttons()
+            awaiting_human_input = True
             return
 
         
@@ -125,7 +149,7 @@ class Game:
             if players[board.curr_player].type in ['human', 'player']:
                 awaiting_human_input = True
             if players[board.curr_player].type in ['bot']:
-                if not awaiting_human_input:
+                if not awaiting_human_input and not self.quit:
                     move = players[board.curr_player].move(board)
                     move = move.split(' ')
                     valid_move = board.make_move(move[0], move[1])
@@ -137,6 +161,7 @@ class Game:
             root.after(10, game_loop)
         
         buttons = create_grid(board)
+        root.title(f'{self.players[0].name} ({self.players[0].__class__.__name__}) vs. {self.players[1].name} ({self.players[1].__class__.__name__})')
         game_loop()
         root.mainloop()
 
@@ -163,95 +188,153 @@ class Game:
 
             self.players = [player1, player2]
 
-
-            board_state = cfg['board_state']
+            board_state = cfg['board_state']           
 
             self.board = Board2D(int(board_state['num_rows']), int(board_state['num_cols']), int(board_state['win_count']), player1.symbol, player2.symbol, int(board_state["current_player"]))
 
-            self.board.state = board_state['board']
+            if 'board' in board_state:
+                self.board.state = board_state['board']
 
             cfg_file.close()
             
         return 0
+    
+    def save_config(self, fn):
+        p1 = self.players[0]
+        p2 = self.players[1]
+        game_dict = {
+            "players": [
+                {
+                    "player_type": p1.__class__.__name__,
+                    "player_number": "0",
+                    "player_name": p1.name,
+                    "player_symbol": p1.symbol
+                },
+                {
+                    "player_type": p2.__class__.__name__,
+                    "player_number": "1",
+                    "player_name": p2.name,
+                    "player_symbol": p2.symbol
+                }
+            ],
 
-    def config(self):
-        clear()
-        p1_type = str(input('Player 1 (Human: 0. DumBot: 1, EasyBot: 2, MediumBot: 3): '))
-        clear()
+            "board_state": {
+                "current_player": "0",
+                "num_rows": self.board.x,
+                "num_cols": self.board.y,
+                "win_count": self.board.n,
+                "board": self.board.state
+            }
+        }
+        with open(fn, 'w+') as f:
+            f.write(json.dumps(game_dict))
 
-        p1_name = str(input('Player 1 Name: '))
-        clear()
-        
-        p1_symbol = str(input('Player 1 Symbol: '))
-        while(len(p1_symbol) != 1):
-            clear()
-            print('Player 1 must be a single character')
-            p1_symbol = str(input('Player 1 Symbol: '))
-        clear()
+    def config(self, root):
+        def start_game():
+            p1_name = entry_p1_name.get()
+            p1_symbol = entry_p1_symbol.get()
+            p1_type = p1_type_var.get()  # Correctly retrieve dropdown selection
 
-        if p1_type == '1':
-            self.players[0] = DumBot(p1_name, p1_symbol)
-        if p1_type == '2':
-            self.players[0] = EasyBot(p1_name, p1_symbol)
-        if p1_type == '3':
-            self.players[0] = MediumBot(p1_name, p1_symbol)
-        else:
-            self.players[0] = Player(p1_name, p1_symbol)
+            if len(p1_symbol) != 1:
+                messagebox.showerror("Error", "Player 1 symbol must be a single character.")
+                return
 
-        p2_type = str(input('Player 2 (Human: 0, DumBot: 1, EasyBot: 2, MediumBot: 3): '))
-        clear()
+            # Handle bot type or player for Player 1
+            if p1_type == "Load from Pickle":
+                p1_bot = load_from_pickle()
+                if p1_bot is None: return
+                self.players[0] = p1_bot
+            else:
+                bot_classes = {"DumBot": DumBot, "EasyBot": EasyBot, "MediumBot": MediumBot, "HardBot": HardBot}
+                if p1_type in bot_classes:
+                    self.players[0] = bot_classes[p1_type](p1_name, p1_symbol)
+                else:
+                    self.players[0] = Player(p1_name, p1_symbol)  # Default to human player
 
-        p2_name = str(input('Player 2 Name: '))
-        while p1_name == p2_name:
-            clear()
-            print('Player 1 and 2 must have different names')
-            p2_name = str(input('Player 2 Name: '))
-        clear()
+            p2_name = entry_p2_name.get()
+            p2_symbol = entry_p2_symbol.get()
+            p2_type = p2_type_var.get()  # Correctly retrieve dropdown selection
 
-        p2_symbol = str(input('Player 2 Symbol: '))
-        while p1_symbol == p2_symbol or len(p2_symbol) != 1:
-            clear()
-            if p1_symbol == p2_symbol:
-                print('Player 1 and 2 must have different characters')
             if len(p2_symbol) != 1:
-                print('Player 2 must be a single character')
-            p2_symbol = str(input('Player 2 Symbol: '))
-        clear()
+                messagebox.showerror("Error", "Player 2 symbol must be a single character.")
+                return
 
-        if p2_type == '1':
-            self.players[1] = DumBot(p2_name, p2_symbol)
-        if p2_type == '2':
-            self.players[1] = EasyBot(p2_name, p2_symbol)
-        if p2_type == '3':
-            self.players[1] = MediumBot(p2_name, p2_symbol)
-        else:
-            self.players[1] = Player(p2_name, p2_symbol)
+            if p1_name == p2_name:
+                messagebox.showerror("Error", "Player 1 and 2 must have different names.")
+                return
 
+            if p1_symbol == p2_symbol:
+                messagebox.showerror("Error", "Player 1 and 2 must have different symbols.")
+                return
 
-        x = str(input('Board Rows: '))
-        while not x.isnumeric():
-            clear()
-            print('Board Rows must be a number')
-            x = str(input('Board Rows: '))
-        clear()
+            # Handle bot type or player for Player 2
+            if p2_type == "Load from Pickle":
+                p2_bot = load_from_pickle()
+                if p2_bot is None: return
+                self.players[1] = p2_bot
+            else:
+                if p2_type in bot_classes:
+                    self.players[1] = bot_classes[p2_type](p2_name, p2_symbol)
+                else:
+                    self.players[1] = Player(p2_name, p2_symbol)  # Default to human player
 
-        y = str(input('Board Columns: '))
-        while not y.isnumeric():
-            clear()
-            print('Board Columns must be a number')
-            y = str(input('Board Columns: '))
-        clear()
+            try:
+                rows = int(entry_rows.get())
+                columns = int(entry_columns.get())
+                win_length = int(entry_win_length.get())
+            except ValueError:
+                messagebox.showerror("Error", "Board dimensions and win length must be valid numbers.")
+                return
 
-        n = str(input('Win Length: '))
-        while not n.isnumeric():
-            clear()
-            print('Win Length must be a number')
-            n = str(input('Win Length: '))
-        clear()
+            # Set up the game board
+            self.board = Board2D(rows, columns, win_length, self.players[0].symbol, self.players[1].symbol, 0)
+            messagebox.showinfo("Success", "Game setup completed!")
+            root.quit()
 
+        # Player 1 setup
+        tk.Label(root, text="Player 1 Name").grid(row=0, column=0)
+        entry_p1_name = tk.Entry(root)
+        entry_p1_name.grid(row=0, column=1)
 
-        self.board = Board2D(int(x), int(y), int(n), self.players[0].symbol, self.players[1].symbol, 0)
+        tk.Label(root, text="Player 1 Symbol").grid(row=1, column=0)
+        entry_p1_symbol = tk.Entry(root)
+        entry_p1_symbol.grid(row=1, column=1)
 
-        clear()
+        tk.Label(root, text="Player 1 Type").grid(row=2, column=0)
+        p1_type_var = tk.StringVar(value="Human")
+        p1_type_menu = tk.OptionMenu(root, p1_type_var, "Human", "DumBot", "EasyBot", "MediumBot", "HardBot", "Load from Pickle")
+        p1_type_menu.grid(row=2, column=1)
 
+        # Player 2 setup
+        tk.Label(root, text="Player 2 Name").grid(row=3, column=0)
+        entry_p2_name = tk.Entry(root)
+        entry_p2_name.grid(row=3, column=1)
+
+        tk.Label(root, text="Player 2 Symbol").grid(row=4, column=0)
+        entry_p2_symbol = tk.Entry(root)
+        entry_p2_symbol.grid(row=4, column=1)
+
+        tk.Label(root, text="Player 2 Type").grid(row=5, column=0)
+        p2_type_var = tk.StringVar(value="Human")
+        p2_type_menu = tk.OptionMenu(root, p2_type_var, "Human", "DumBot", "EasyBot", "MediumBot", "HardBot", "Load from Pickle")
+        p2_type_menu.grid(row=5, column=1)
+
+        # Board setup
+        tk.Label(root, text="Board Rows").grid(row=6, column=0)
+        entry_rows = tk.Entry(root)
+        entry_rows.grid(row=6, column=1)
+
+        tk.Label(root, text="Board Columns").grid(row=7, column=0)
+        entry_columns = tk.Entry(root)
+        entry_columns.grid(row=7, column=1)
+
+        tk.Label(root, text="Win Length").grid(row=8, column=0)
+        entry_win_length = tk.Entry(root)
+        entry_win_length.grid(row=8, column=1)
+
+        # Start game button
+        start_button = tk.Button(root, text="Start Game", command=start_game)
+        start_button.grid(row=9, column=0, columnspan=2, pady=10)
+
+        root.mainloop()
         return 0

@@ -1,0 +1,1 @@
+{"players": [{"player_type": "Human", "player_number": "0", "player_name": "Nick", "player_symbol": "X"}, {"player_type": "HardBot", "player_number": "1", "player_name": "HardBot", "player_symbol": "O"}], "board_state": {"current_player": "0", "num_rows": 5, "num_cols": 7, "win_count": 4, "board": "-----------------------------------"}}

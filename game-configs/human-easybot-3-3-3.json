@@ -1,15 +1,15 @@
 {
     "players": [
         {
-            "player_type": "human",
+            "player_type": "Human",
             "player_number": "0",
             "player_name": "Human",
             "player_symbol": "X"
         },
         {
-            "player_type": "easybot",
+            "player_type": "EasyBot",
             "player_number": "1",
-            "player_name": "DumBot",
+            "player_name": "EasyBot",
             "player_symbol": "O"
         }
     ],
@@ -18,7 +18,6 @@
         "current_player": "0",
         "num_rows": 3,
         "num_cols": 3,
-        "win_count": 3,
-        "board": "---------"
+        "win_count": 3
     }
 }

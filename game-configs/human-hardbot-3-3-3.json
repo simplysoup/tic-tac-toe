@@ -1,24 +1,23 @@
 {
     "players": [
         {
-            "player_type": "human",
+            "player_type": "Human",
             "player_number": "0",
             "player_name": "Human",
             "player_symbol": "X"
         },
         {
-            "player_type": "medbot",
+            "player_type": "HardBot",
             "player_number": "1",
-            "player_name": "MediumBot",
+            "player_name": "HardBot",
             "player_symbol": "O"
         }
     ],
 
     "board_state": {
         "current_player": "0",
-        "num_rows": 5,
-        "num_cols": 7,
-        "win_count": 4,
-        "board": "-----------------------------------"
+        "num_rows": 3,
+        "num_cols": 3,
+        "win_count": 3
     }
 }

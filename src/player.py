@@ -33,8 +33,8 @@ class EasyBot(Player):
         self.type = 'bot'
 
     def move(self, board: Board2D):
-        move = find_winning_move(board, self.symbol)
-        if move > 0:
+        move = find_winning_moves(board, self.symbol)[0]
+        if move >= 0:
             return ' '.join([str(i) for i in board.sq_from_index(move)])
         return ' '.join([str(i) for i in board.sq_from_index(random.sample(board.legal_moves(), 1)[0])])
 
@@ -42,36 +42,47 @@ class MediumBot(Player):
     def __init__(self, name: str, symbol: chr):
         super().__init__(name, symbol)
         self.type = 'bot'
-        with open('log.txt', 'w+') as f:
-            f.write('')
-            f.close()
-
-    def log(self, board, move, note):
-        with open('log.txt', 'a+') as f:
-            f.write(' '.join([str(i) for i in board.sq_from_index(move)]) + note + "\n")
-            f.close()
 
     def move(self, board: Board2D):
-        move = find_winning_move(board, self.symbol)
+        move = find_winning_moves(board, self.symbol)[0]
         if move >= 0:
-            self.log(board, move, 'winning')
             return ' '.join([str(i) for i in board.sq_from_index(move)])
         
-        move = find_winning_move(board, board.players[1-board.curr_player])
+        move = find_winning_moves(board, board.players[1-board.curr_player])[0]
         if move >= 0:
-            self.log(board, move, 'saving')
             return ' '.join([str(i) for i in board.sq_from_index(move)])
 
         move = random.sample(board.legal_moves(), 1)[0]
-        self.log(board, move, "random")
         return ' '.join([str(i) for i in board.sq_from_index(move)])
     
+class HardBot(Player):
+    def __init__(self, name: str, symbol: chr):
+        super().__init__(name, symbol)
+        self.type = 'bot'
+
+    def move(self, board: Board2D):
+        move = find_winning_moves(board, self.symbol)[0]
+        if move >= 0:
+            return ' '.join([str(i) for i in board.sq_from_index(move)])
+        
+        move = find_winning_moves(board, board.players[1-board.curr_player])[0]
+        if move >= 0:
+            return ' '.join([str(i) for i in board.sq_from_index(move)])
+        
+        move = create_win_chances(board, self.symbol)
+        if move >= 0:
+            return ' '.join([str(i) for i in board.sq_from_index(move)])
+        
+        move = create_win_chances(board, board.players[1-board.curr_player])
+        if move >= 0:
+            return ' '.join([str(i) for i in board.sq_from_index(move)])
+
+        move = random.sample(board.legal_moves(), 1)[0]
+        return ' '.join([str(i) for i in board.sq_from_index(move)])
     
 
-        
-import time
-
-def find_winning_move(board: Board2D, player: str):
+def find_winning_moves(board: Board2D, player: str):
+    wins = []
     for move in board.legal_moves():
         test_board = board.__copy__()
         i, j = board.sq_from_index(move)
@@ -79,5 +90,21 @@ def find_winning_move(board: Board2D, player: str):
         winning = test_board.check_win(player)
 
         if winning:
-            return move
-    return -1
+            wins.append(move)
+    if len(wins) == 0:
+        wins.append(-1)
+    return wins
+
+def create_win_chances(board: Board2D, player: str):
+    max_count = 1
+    max_move = -1
+    for move in board.legal_moves():
+        test_board = board.__copy__()
+        i, j = board.sq_from_index(move)
+        test_board.set_square(player, i, j)
+        count = len(find_winning_moves(test_board, player))
+        if count > max_count:
+            max_count = count
+            max_move = move
+    return max_move
+    
