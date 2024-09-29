@@ -7,7 +7,6 @@ default_configs = {
     "Human vs EasyBot (3x3, 3)": 'game-configs\human-easybot-3-3-3.json',
     "Human vs MedBot (3x3, 3)": 'game-configs\human-medbot-3-3-3.json',
     "Human vs HardBot (3x3, 3)": 'game-configs\human-hardbot-3-3-3.json',
-    "Human vs HardBot (5x7, 4)": 'game-configs\human-hardbot-5-7-4.json'
 }
 
 
